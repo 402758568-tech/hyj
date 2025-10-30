@@ -311,12 +311,12 @@
         
         async function startPopupSequence() {
             const screenWidth = window.innerWidth;
-            let popupCount = 12;
+            let popupCount = 40; // 增加到35个
             
             if (screenWidth < 480) {
-                popupCount = 8;
+                popupCount = 30; // 小屏幕适当减少
             } else if (screenWidth < 768) {
-                popupCount = 10;
+                popupCount = 35; // 中等屏幕
             }
             
             for (let i = 0; i < popupCount; i++) {
@@ -331,13 +331,13 @@
                 clearInterval(autoPopupInterval);
             }
             
-            // 每800ms弹出一个新窗口
+            // 每600ms弹出一个新窗口（加快弹出速度）
             autoPopupInterval = setInterval(() => {
-                // 如果当前弹窗数量少于15个，就继续弹出
-                if (currentPopups.length < 15) {
+                // 如果当前弹窗数量少于25个，就继续弹出
+                if (currentPopups.length < 25) {
                     createSinglePopup();
                 }
-            }, 800);
+            }, 600);
         }
         
         // 页面加载时立即开始弹窗序列
