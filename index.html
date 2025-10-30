@@ -82,58 +82,6 @@
             }
         }
         
-        .control-panel {
-            position: fixed;
-            bottom: 25px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 15px;
-            z-index: 1000;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 15px 25px;
-            border-radius: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .control-btn {
-            background: rgba(255, 255, 255, 0.9);
-            border: none;
-            border-radius: 20px;
-            padding: 12px 20px;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            font-weight: 500;
-            color: #333;
-        }
-        
-        .control-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
-        }
-        
-        .control-btn:active {
-            transform: scale(0.95);
-        }
-        
-        .control-btn.start {
-            background: #4CAF50;
-            color: white;
-        }
-        
-        .control-btn.stop {
-            background: #ff6b6b;
-            color: white;
-        }
-        
-        .control-btn.clear {
-            background: #ffa726;
-            color: white;
-        }
-        
         .header {
             position: fixed;
             top: 20px;
@@ -143,6 +91,7 @@
             color: white;
             z-index: 100;
             padding: 0 20px;
+            height: 80px; /* 为标题区域预留空间 */
         }
         
         .header h1 {
@@ -177,20 +126,6 @@
             z-index: 20;
         }
         
-        .counter {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            color: white;
-            font-size: 14px;
-            background: rgba(0,0,0,0.3);
-            padding: 8px 15px;
-            border-radius: 15px;
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
         /* 响应式设计 */
         @media (max-width: 768px) {
             .tip-card {
@@ -211,17 +146,6 @@
             .header p {
                 font-size: 13px;
             }
-            
-            .control-panel {
-                bottom: 20px;
-                padding: 12px 20px;
-                gap: 10px;
-            }
-            
-            .control-btn {
-                padding: 10px 15px;
-                font-size: 13px;
-            }
         }
         
         @media (max-width: 480px) {
@@ -235,17 +159,6 @@
             .tip-text {
                 font-size: 15px;
             }
-            
-            .control-panel {
-                flex-direction: column;
-                width: 80%;
-                max-width: 200px;
-            }
-            
-            .control-btn {
-                padding: 8px 12px;
-                font-size: 12px;
-            }
         }
     </style>
 </head>
@@ -255,16 +168,8 @@
         <p>点击卡片可关闭</p>
     </div>
     
-    <div class="counter" id="counter">弹窗数: 0</div>
-    
     <div class="container" id="tipContainer">
         <div class="loading" id="loadingText">弹窗即将出现...</div>
-    </div>
-    
-    <div class="control-panel">
-        <button class="control-btn start" onclick="startAutoPopup()">开始循环</button>
-        <button class="control-btn stop" onclick="stopAutoPopup()">停止循环</button>
-        <button class="control-btn clear" onclick="clearAllPopups()">清空所有</button>
     </div>
 
     <script>
@@ -284,15 +189,8 @@
         
         let currentPopups = [];
         let autoPopupInterval = null;
-        let totalPopupCount = 0;
         
-        // 更新计数器
-        function updateCounter() {
-            const counter = document.getElementById('counter');
-            counter.textContent = `弹窗数: ${currentPopups.length}`;
-        }
-        
-        // 获取安全的随机位置
+        // 获取安全的随机位置（避开标题区域）
         function getRandomPosition() {
             const container = document.getElementById('tipContainer');
             const containerRect = container.getBoundingClientRect();
@@ -301,11 +199,15 @@
             const cardHeight = 100;
             
             const margin = 20;
+            const headerHeight = 100; // 标题区域高度，避免弹窗出现在标题下面
+            
+            // 计算安全区域（避开标题区域）
+            const minY = headerHeight + margin; // 从标题下方开始
             const maxX = containerRect.width - cardWidth - margin;
             const maxY = containerRect.height - cardHeight - margin;
             
             const x = margin + Math.random() * maxX;
-            const y = margin + Math.random() * maxY;
+            const y = minY + Math.random() * (maxY - minY);
             
             return { x, y };
         }
@@ -344,7 +246,7 @@
             card.className = 'tip-card';
             card.style.backgroundColor = bgColor;
             
-            // 设置随机位置
+            // 设置随机位置（避开标题区域）
             const position = getRandomPosition();
             card.style.left = position.x + 'px';
             card.style.top = position.y + 'px';
@@ -372,7 +274,6 @@
                         const cardIndex = currentPopups.indexOf(this);
                         if (cardIndex > -1) {
                             currentPopups.splice(cardIndex, 1);
-                            updateCounter();
                         }
                     }
                 }, 300);
@@ -381,10 +282,8 @@
             card.appendChild(text);
             container.appendChild(card);
             currentPopups.push(card);
-            totalPopupCount++;
-            updateCounter();
             
-            // 自动关闭（10秒后）
+            // 自动关闭（8秒后）
             setTimeout(() => {
                 if (card.parentNode) {
                     card.style.animation = 'fadeOut 0.3s ease-out forwards';
@@ -394,12 +293,11 @@
                             const cardIndex = currentPopups.indexOf(card);
                             if (cardIndex > -1) {
                                 currentPopups.splice(cardIndex, 1);
-                                updateCounter();
                             }
                         }
                     }, 300);
                 }
-            }, 10000);
+            }, 8000);
         }
         
         function createPopupCard(tip, bgColor, index) {
@@ -413,12 +311,12 @@
         
         async function startPopupSequence() {
             const screenWidth = window.innerWidth;
-            let popupCount = 15;
+            let popupCount = 12;
             
             if (screenWidth < 480) {
-                popupCount = 10;
+                popupCount = 8;
             } else if (screenWidth < 768) {
-                popupCount = 12;
+                popupCount = 10;
             }
             
             for (let i = 0; i < popupCount; i++) {
@@ -433,43 +331,22 @@
                 clearInterval(autoPopupInterval);
             }
             
-            // 每500ms弹出一个新窗口
+            // 每800ms弹出一个新窗口
             autoPopupInterval = setInterval(() => {
-                // 如果当前弹窗数量少于20个，就继续弹出
-                if (currentPopups.length < 20) {
+                // 如果当前弹窗数量少于15个，就继续弹出
+                if (currentPopups.length < 15) {
                     createSinglePopup();
                 }
-            }, 500);
-        }
-        
-        function stopAutoPopup() {
-            if (autoPopupInterval) {
-                clearInterval(autoPopupInterval);
-                autoPopupInterval = null;
-            }
-        }
-        
-        function clearAllPopups() {
-            stopAutoPopup();
-            currentPopups.forEach(card => {
-                card.style.animation = 'fadeOut 0.2s ease-out forwards';
-                setTimeout(() => {
-                    if (card.parentNode) {
-                        card.parentNode.removeChild(card);
-                    }
-                }, 200);
-            });
-            currentPopups = [];
-            updateCounter();
+            }, 800);
         }
         
         // 页面加载时立即开始弹窗序列
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(startPopupSequence, 500);
-            setTimeout(startAutoPopup, 3000); // 3秒后开始循环弹出
+            setTimeout(startAutoPopup, 2000); // 2秒后开始循环弹出
         });
         
-        // 窗口大小变化时重新适配
+        // 窗口大小变化时重新开始
         window.addEventListener('resize', function() {
             // 可以在这里添加重新布局的逻辑
         });
@@ -481,13 +358,8 @@
         document.addEventListener('keydown', function(e) {
             if (e.code === 'Space' || e.code === 'Enter') {
                 startPopupSequence();
-            } else if (e.code === 'Escape') {
-                stopAutoPopup();
             }
         });
-        
-        // 初始化计数器
-        updateCounter();
     </script>
 </body>
 </html>
